@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>D-SCAE — Form Fields</title>
+  <style>
+    :root { --bg: #f5f4f0; --surface: #ffffff; --border: #e2e0d8; --primary: #534AB7; --primary-light: #EEEDFE; --primary-dark: #3C3489; --text: #2c2c2a; --muted: #5f5e5a; --danger: #A32D2D; --success: #0F6E56; --warning: #BA7517; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    .page { max-width: 1100px; margin: 0 auto; padding: 28px 16px 60px; }
+    .topbar { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
+    .h1 { font-size: 20px; font-weight: 800; }
+    .sub { margin-top: 6px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 9px 12px; border-radius: 10px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; text-decoration: none; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-outline { background: #fff; color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover { border-color: rgba(83,74,183,0.35); color: var(--primary); }
+
+    .flash { padding: 10px 12px; border-radius: 10px; font-size: 13px; margin: 0 0 14px; border: 1px solid var(--border); background: #fff; }
+    .flash.success { border-color: rgba(15,110,86,0.35); background: #EAF3DE; color: #2D5A29; }
+    .flash.danger  { border-color: rgba(163,45,45,0.35); background: #FCEBEB; color: var(--danger); }
+    .flash.warning { border-color: rgba(186,117,23,0.35); background: #FAEEDA; color: #7A4A0A; }
+
+    .grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 16px; align-items: start; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 8px 22px rgba(0,0,0,0.06);
+      padding: 18px;
+    }
+    .card h2 { font-size: 14px; font-weight: 800; margin-bottom: 12px; }
+    .muted { color: var(--muted); font-size: 12px; }
+
+    table { width: 100%; border-collapse: collapse; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #fff; }
+    th, td { text-align: left; padding: 10px 10px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: top; }
+    th { background: #FBFAF7; font-size: 12px; color: var(--muted); font-weight: 800; letter-spacing: 0.02em; }
+    tr:last-child td { border-bottom: none; }
+    .pill { font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--border); background: #fff; display: inline-block; }
+    .pill.type { border-color: rgba(83,74,183,0.25); background: var(--primary-light); color: var(--primary-dark); }
+    .pill.req { border-color: rgba(15,110,86,0.25); background: #EAF3DE; color: #2D5A29; }
+    .pill.opt { border-color: rgba(186,117,23,0.25); background: #FAEEDA; color: #7A4A0A; }
+
+    form { display: grid; gap: 12px; }
+    label { font-size: 12px; font-weight: 800; }
+    input, select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+    input:focus, select:focus { border-color: rgba(83,74,183,0.45); box-shadow: 0 0 0 4px rgba(83,74,183,0.10); }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 500px) { .row { grid-template-columns: 1fr; } }
+    .check { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px dashed var(--border); border-radius: 12px; background: #fff; }
+    .check input { width: auto; }
+    .empty { padding: 14px; border: 1px dashed var(--border); border-radius: 12px; background: #fff; color: var(--muted); font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div>
+        <div class="h1">Form Fields</div>
+        <div class="sub">Manage the dynamic schema for <span class="pill">Form #{{ form_id }}</span>.</div>
+      </div>
+      <div class="actions">
+        <a class="btn btn-outline" href="/forms/{{ form_id }}/rules">Rules</a>
+        <a class="btn btn-outline" href="/analytics/{{ form_id }}">Analytics</a>
+        <a class="btn btn-outline" href="/dashboard">Back</a>
+      </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="flash {{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <div class="grid">
+      <section class="card">
+        <h2>Current fields</h2>
+        {% if fields and (fields|length) > 0 %}
+          <table aria-label="Form fields table">
+            <thead>
+              <tr>
+                <th style="width:72px;">Order</th>
+                <th>Field</th>
+                <th style="width:140px;">Type</th>
+                <th style="width:120px;">Required</th>
+                <th style="width:220px;">Validation</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for f in fields %}
+              <tr>
+                <td>{{ f.display_order }}</td>
+                <td>
+                  <div style="font-weight:800;">{{ f.field_name }}</div>
+                  <div class="muted">ID: {{ f.field_id }}</div>
+                </td>
+                <td><span class="pill type">{{ f.field_type }}</span></td>
+                <td>
+                  {% if f.is_required %}
+                    <span class="pill req">Required</span>
+                  {% else %}
+                    <span class="pill opt">Optional</span>
+                  {% endif %}
+                </td>
+                <td class="muted">{{ f.validation_rule if f.validation_rule else "—" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <div class="empty">No fields added yet. Add your first field on the right.</div>
+        {% endif %}
+      </section>
+
+      <aside class="card">
+        <h2>Add new field</h2>
+        <form method="POST" action="/forms/{{ form_id }}/fields">
+          <div>
+            <label for="field_name">Field name</label>
+            <input id="field_name" name="field_name" type="text" placeholder="e.g., CGPA, Date of Joining" required />
+          </div>
+
+          <div>
+            <label for="field_type">Field type</label>
+            <select id="field_type" name="field_type" required>
+              <option value="TEXT">TEXT</option>
+              <option value="NUMERIC">NUMERIC</option>
+              <option value="DATE">DATE</option>
+            </select>
+          </div>
+
+          <div class="row">
+            <div>
+              <label for="display_order">Display order</label>
+              <input id="display_order" name="display_order" type="number" min="1" step="1" value="1" />
+            </div>
+            <div>
+              <label for="validation_rule">Validation rule</label>
+              <input id="validation_rule" name="validation_rule" type="text" placeholder="Optional (e.g., >=0 and <=10)" />
+            </div>
+          </div>
+
+          <label class="check" for="is_required">
+            <input id="is_required" name="is_required" type="checkbox" />
+            <div>
+              <div style="font-weight:800;font-size:13px;">Required field</div>
+              <div class="muted">Students must fill this before submitting.</div>
+            </div>
+          </label>
+
+          <button class="btn btn-primary" type="submit">Add field</button>
+          <div class="muted">Tip: You can fine-tune rules on the Rules page.</div>
+        </form>
+      </aside>
+    </div>
+  </div>
+</body>
+</html>

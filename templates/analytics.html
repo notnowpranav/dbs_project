@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>D-SCAE — Analytics</title>
+  <style>
+    :root { --bg: #f5f4f0; --surface: #ffffff; --border: #e2e0d8; --primary: #534AB7; --primary-light: #EEEDFE; --primary-dark: #3C3489; --text: #2c2c2a; --muted: #5f5e5a; --danger: #A32D2D; --success: #0F6E56; --warning: #BA7517; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    .page { max-width: 1200px; margin: 0 auto; padding: 28px 16px 60px; }
+    .topbar { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
+    .h1 { font-size: 22px; font-weight: 900; line-height: 1.15; }
+    .sub { margin-top: 6px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 9px 12px; border-radius: 10px; font-size: 13px; font-weight: 800; border: none; cursor: pointer; text-decoration: none; }
+    .btn-outline { background: #fff; color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover { border-color: rgba(83,74,183,0.35); color: var(--primary); }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 8px 22px rgba(0,0,0,0.06);
+      padding: 18px;
+    }
+
+    .kpis { display: grid; grid-template-columns: repeat(12, 1fr); gap: 14px; margin: 18px 0 18px; }
+    .kpi { grid-column: span 4; padding: 18px; }
+    @media (max-width: 950px) { .kpi { grid-column: span 6; } }
+    @media (max-width: 600px) { .kpi { grid-column: span 12; } }
+    .kpi .label { font-size: 12px; color: var(--muted); font-weight: 800; letter-spacing: 0.02em; }
+    .kpi .value { margin-top: 8px; font-size: 30px; font-weight: 1000; color: var(--primary); line-height: 1; }
+    .kpi .meta { margin-top: 10px; font-size: 12px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .pill { display: inline-block; font-size: 11px; font-weight: 900; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border); background: #fff; }
+    .pill.primary { border-color: rgba(83,74,183,0.25); background: var(--primary-light); color: var(--primary-dark); }
+    .pill.success { border-color: rgba(15,110,86,0.25); background: #EAF3DE; color: #2D5A29; }
+    .pill.danger { border-color: rgba(163,45,45,0.25); background: #FCEBEB; color: var(--danger); }
+
+    .section-title { margin: 18px 0 10px; font-size: 14px; font-weight: 900; }
+    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 14px; }
+    .q { grid-column: span 6; padding: 18px; }
+    @media (max-width: 950px) { .q { grid-column: span 12; } }
+    .q .qname { font-size: 15px; font-weight: 1000; }
+    .q .qmeta { margin-top: 6px; font-size: 12px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .q .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
+    @media (max-width: 520px) { .q .metrics { grid-template-columns: 1fr; } }
+    .mini {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+      padding: 12px;
+    }
+    .mini .m-label { font-size: 11px; color: var(--muted); font-weight: 900; letter-spacing: 0.02em; }
+    .mini .m-val { margin-top: 6px; font-size: 20px; font-weight: 1000; color: var(--text); }
+    .muted { color: var(--muted); font-size: 12px; }
+    .empty { padding: 14px; border: 1px dashed var(--border); border-radius: 12px; background: #fff; color: var(--muted); font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div>
+        <div class="h1">
+          Analytics — {{ form.title if form and form.title is defined else ("Form #" ~ (form.form_id if form and form.form_id is defined else "")) }}
+        </div>
+        <div class="sub">
+          Participation and response summary for this form.
+        </div>
+      </div>
+      <div class="actions">
+        {% if form and form.form_id is defined %}
+          <a class="btn btn-outline" href="/forms/{{ form.form_id }}/fields">Fields</a>
+          <a class="btn btn-outline" href="/forms/{{ form.form_id }}/rules">Rules</a>
+        {% endif %}
+        <a class="btn btn-outline" href="/dashboard">Back</a>
+      </div>
+    </div>
+
+    {% set submitted = (participation.submitted if participation and participation.submitted is defined else 0) %}
+    {% set total = (participation.total if participation and participation.total is defined else 0) %}
+    {% set pct = ( (submitted / total * 100) if total else 0 ) %}
+
+    <div class="kpis">
+      <div class="card kpi">
+        <div class="label">Submitted</div>
+        <div class="value">{{ submitted }}</div>
+        <div class="meta"><span class="pill success">Distinct students</span></div>
+      </div>
+      <div class="card kpi">
+        <div class="label">Total students</div>
+        <div class="value">{{ total }}</div>
+        <div class="meta"><span class="pill primary">Role: student</span></div>
+      </div>
+      <div class="card kpi">
+        <div class="label">Participation rate</div>
+        <div class="value">{{ "%.1f"|format(pct) }}%</div>
+        <div class="meta">
+          <span class="pill {% if pct >= 66 %}success{% elif pct >= 33 %}primary{% else %}danger{% endif %}">
+            {% if pct >= 66 %}High{% elif pct >= 33 %}Moderate{% else %}Low{% endif %}
+          </span>
+          <span class="pill">{{ submitted }} / {{ total }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">Question metrics</div>
+
+    {% if stats and (stats|length) > 0 %}
+      <div class="grid">
+        {% for s in stats %}
+          {% set ft = (s.field_type or '')|upper %}
+          <div class="card q">
+            <div class="qname">{{ s.field_name }}</div>
+            <div class="qmeta">
+              <span class="pill primary">{{ s.field_type }}</span>
+              <span class="muted">Answers counted from all submissions</span>
+            </div>
+
+            <div class="metrics">
+              <div class="mini">
+                <div class="m-label">Total answers</div>
+                <div class="m-val">{{ s.total }}</div>
+              </div>
+
+              <div class="mini">
+                <div class="m-label">Avg value</div>
+                <div class="m-val">
+                  {% if ft == 'NUMERIC' and s.avg_val is not none %}
+                    {{ s.avg_val }}
+                  {% else %}
+                    —
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="mini">
+                <div class="m-label">Yes / No</div>
+                <div class="m-val">
+                  {% if s.yes_count or s.no_count %}
+                    {{ s.yes_count }} / {{ s.no_count }}
+                  {% else %}
+                    —
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty">No analytics available yet for this form.</div>
+    {% endif %}
+  </div>
+</body>
+</html>

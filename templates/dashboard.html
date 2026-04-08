@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D-SCAE — Dashboard</title>
+<style>
+  :root {
+    --bg: #f5f4f0; --surface: #ffffff; --border: #e2e0d8;
+    --primary: #534AB7; --primary-light: #EEEDFE; --primary-dark: #3C3489;
+    --text: #2c2c2a; --muted: #5f5e5a; --danger: #A32D2D;
+    --success: #0F6E56; --warning: #BA7517;
+    --sidebar-w: 220px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar { width: var(--sidebar-w); background: var(--surface); border-right: 1px solid var(--border); padding: 24px 0; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; }
+  .sidebar-logo { padding: 0 20px 24px; border-bottom: 1px solid var(--border); }
+  .sidebar-logo h1 { font-size: 18px; font-weight: 700; color: var(--primary); }
+  .sidebar-logo p  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .sidebar-nav { padding: 16px 0; flex: 1; }
+  .nav-item { display: block; padding: 10px 20px; font-size: 14px; color: var(--muted); text-decoration: none; border-left: 3px solid transparent; transition: all 0.15s; }
+  .nav-item:hover, .nav-item.active { color: var(--primary); background: var(--primary-light); border-left-color: var(--primary); }
+  .sidebar-user { padding: 16px 20px; border-top: 1px solid var(--border); font-size: 13px; }
+  .sidebar-user .name { font-weight: 600; }
+  .sidebar-user .role { color: var(--muted); font-size: 11px; }
+  .sidebar-user a { font-size: 12px; color: var(--danger); text-decoration: none; display: block; margin-top: 8px; }
+
+  /* Main */
+  .main { margin-left: var(--sidebar-w); flex: 1; padding: 32px; }
+  .page-title { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+  .page-sub { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+
+  /* Flash messages */
+  .flash { padding: 10px 16px; border-radius: 8px; font-size: 14px; margin-bottom: 20px; }
+  .flash.success { background: #EAF3DE; color: #3B6D11; }
+  .flash.danger  { background: #FCEBEB; color: #A32D2D; }
+
+  /* Stats row */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .stat-card .val { font-size: 28px; font-weight: 700; color: var(--primary); }
+  .stat-card .lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* Form cards */
+  .section-title { font-size: 15px; font-weight: 600; margin-bottom: 14px; }
+  .forms-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; transition: box-shadow 0.15s; }
+  .form-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+  .form-card .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 600; margin-bottom: 10px; }
+  .badge.open   { background: #EAF3DE; color: #3B6D11; }
+  .badge.closed { background: #F1EFE8; color: #5F5E5A; }
+  .badge.draft  { background: #FAEEDA; color: #854F0B; }
+  .badge.eligible   { background: var(--primary-light); color: var(--primary-dark); }
+  .badge.ineligible { background: #FCEBEB; color: var(--danger); }
+  .form-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .form-card p  { font-size: 13px; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
+  .form-card .deadline { font-size: 12px; color: var(--warning); margin-bottom: 14px; }
+  .btn { display: inline-block; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none; border: none; cursor: pointer; transition: opacity 0.15s; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+  .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+  /* Empty state */
+  .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .empty p { margin-top: 8px; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h1>D-SCAE</h1>
+    <p>Data Collection Engine</p>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="/dashboard" class="nav-item active">📊 Dashboard</a>
+    {% if session.role == 'admin' %}
+    <a href="/forms/new" class="nav-item">➕ New Form</a>
+    {% endif %}
+  </nav>
+  <div class="sidebar-user">
+    <div class="name">{{ session.username }}</div>
+    <div class="role">{{ session.role | capitalize }}</div>
+    <a href="/logout">Sign out</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="page-title">
+    {% if session.role == 'admin' %}All Forms{% else %}Available Forms{% endif %}
+  </div>
+  <div class="page-sub">
+    {% if session.role == 'admin' %}Manage and monitor all data collection events.
+    {% else %}Forms you are eligible to fill out.{% endif %}
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+    <div class="flash {{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- Stats row (admin only) -->
+  {% if session.role == 'admin' %}
+  <div class="stats">
+    <div class="stat-card">
+      <div class="val">{{ forms | selectattr('status','eq','open') | list | length }}</div>
+      <div class="lbl">Open forms</div>
+    </div>
+    <div class="stat-card">
+      <div class="val">{{ forms | length }}</div>
+      <div class="lbl">Total forms</div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Form cards -->
+  <div class="section-title">
+    {% if session.role == 'admin' %}All forms{% else %}Forms for you{% endif %}
+  </div>
+
+  {% if forms %}
+  <div class="forms-grid">
+    {% for f in forms %}
+    <div class="form-card">
+      <span class="badge {{ f.status }}">{{ f.status | upper }}</span>
+      {% if session.role == 'student' and f.eligible is defined %}
+        <span class="badge {% if f.eligible == 'ELIGIBLE' %}eligible{% else %}ineligible{% endif %}">
+          {{ f.eligible }}
+        </span>
+      {% endif %}
+      <h3>{{ f.title }}</h3>
+      <div class="deadline">⏰ Deadline: {{ f.end_date }}</div>
+      {% if session.role == 'admin' %}
+        <a href="/forms/{{ f.form_id }}/fields"  class="btn btn-outline btn-sm">Fields</a>
+        <a href="/forms/{{ f.form_id }}/rules"   class="btn btn-outline btn-sm">Rules</a>
+        <a href="/analytics/{{ f.form_id }}"     class="btn btn-primary btn-sm">Analytics</a>
+      {% else %}
+        {% if f.eligible == 'ELIGIBLE' and f.status == 'open' %}
+        <a href="/forms/{{ f.form_id }}/submit"  class="btn btn-primary btn-sm">Fill Form</a>
+        {% else %}
+        <span class="btn btn-outline btn-sm" style="opacity:0.5;cursor:not-allowed">Not eligible</span>
+        {% endif %}
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty">
+    <div style="font-size:40px">📋</div>
+    <p>No forms available right now.</p>
+  </div>
+  {% endif %}
+</main>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D-SCAE — Login</title>
+<style>
+  :root { --bg: #f5f4f0; --surface: #ffffff; --border: #e2e0d8; --primary: #534AB7; --primary-light: #EEEDFE; --primary-dark: #3C3489; --text: #2c2c2a; --muted: #5f5e5a; --danger: #A32D2D; --success: #0F6E56; --warning: #BA7517; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 28px 16px;
+  }
+  .shell { width: 100%; max-width: 940px; display: grid; grid-template-columns: 1fr 0.9fr; gap: 16px; align-items: start; }
+  @media (max-width: 860px) { .shell { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.06);
+    padding: 26px;
+  }
+  .brand { text-align: left; margin-bottom: 14px; }
+  .brand h2 { font-size: 22px; font-weight: 1000; color: var(--primary); margin-bottom: 6px; }
+  .brand p  { color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+  .flash { padding: 10px 12px; border-radius: 10px; font-size: 13px; margin: 0 0 14px; border: 1px solid var(--border); background: #fff; }
+  .flash.success { border-color: rgba(15,110,86,0.35); background: #EAF3DE; color: #2D5A29; }
+  .flash.danger  { border-color: rgba(163,45,45,0.35); background: #FCEBEB; color: var(--danger); }
+  .flash.warning { border-color: rgba(186,117,23,0.35); background: #FAEEDA; color: #7A4A0A; }
+
+  form { display: grid; gap: 12px; margin-top: 8px; }
+  label { font-size: 12px; font-weight: 900; }
+  input {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 14px;
+    outline: none;
+    background: #fff;
+    color: var(--text);
+  }
+  input:focus { border-color: rgba(83,74,183,0.45); box-shadow: 0 0 0 4px rgba(83,74,183,0.10); }
+  .btn {
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 1000;
+    border: none;
+    cursor: pointer;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .muted { color: var(--muted); font-size: 13px; line-height: 1.5; }
+  .link { color: var(--primary); text-decoration: none; font-weight: 900; }
+  .link:hover { text-decoration: underline; }
+
+  .kpi {
+    display: grid;
+    gap: 10px;
+  }
+  .pill { display: inline-block; font-size: 11px; font-weight: 1000; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border); background: #fff; }
+  .pill.primary { border-color: rgba(83,74,183,0.25); background: var(--primary-light); color: var(--primary-dark); }
+  .cred {
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    background: #fff;
+    padding: 14px;
+  }
+  .cred .h { font-size: 13px; font-weight: 1000; margin-bottom: 8px; }
+  .cred .row { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; background: #FBFAF7; }
+  .cred code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <div class="card">
+    <div class="brand">
+      <h2>D-SCAE</h2>
+      <p>Dynamic Schema Data Collection Engine</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="flash {{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="POST" action="/login">
+      <div>
+        <label for="username">Username</label>
+        <input id="username" type="text" name="username" placeholder="e.g., admin1" required autocomplete="username">
+      </div>
+      <div>
+        <label for="password">Password</label>
+        <input id="password" type="password" name="password" placeholder="Your password" required autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary" type="submit">Log In</button>
+      <div class="muted" style="text-align:center;">
+        New here? <a class="link" href="/register">Create a student account</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="card kpi">
+    <span class="pill primary">Quick test</span>
+    <div class="muted">If you inserted the admin row we discussed, you can use these credentials to verify the app end-to-end.</div>
+    <div class="cred" aria-label="Test credentials">
+      <div class="h">Admin login</div>
+      <div class="row"><span>Username</span><code>admin1</code></div>
+      <div class="row"><span>Password</span><code>Admin@123</code></div>
+    </div>
+    <div class="muted">Note: passwords are checked as SHA-256 hashes stored in the `USERS.password_hash` column.</div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>D-SCAE — Submit Form</title>
+  <style>
+    :root { --bg: #f5f4f0; --surface: #ffffff; --border: #e2e0d8; --primary: #534AB7; --primary-light: #EEEDFE; --primary-dark: #3C3489; --text: #2c2c2a; --muted: #5f5e5a; --danger: #A32D2D; --success: #0F6E56; --warning: #BA7517; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    .wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 28px 16px; }
+    .card {
+      width: 100%;
+      max-width: 720px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 8px 22px rgba(0,0,0,0.06);
+      padding: 26px;
+    }
+    .top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+    .title { font-size: 20px; font-weight: 700; line-height: 1.2; }
+    .sub { margin-top: 6px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .meta { display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
+    .pill { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--primary-light); color: var(--primary-dark); border: 1px solid rgba(83,74,183,0.20); font-weight: 600; }
+    .link { font-size: 12px; color: var(--muted); text-decoration: none; padding: 6px 10px; border-radius: 10px; border: 1px solid var(--border); background: #fff; }
+    .link:hover { border-color: rgba(83,74,183,0.35); color: var(--primary); }
+
+    .flash { padding: 10px 12px; border-radius: 10px; font-size: 13px; margin: 0 0 14px; border: 1px solid var(--border); background: #fff; }
+    .flash.success { border-color: rgba(15,110,86,0.35); background: #EAF3DE; color: #2D5A29; }
+    .flash.danger  { border-color: rgba(163,45,45,0.35); background: #FCEBEB; color: var(--danger); }
+    .flash.warning { border-color: rgba(186,117,23,0.35); background: #FAEEDA; color: #7A4A0A; }
+
+    form { margin-top: 10px; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+    .field { display: grid; gap: 6px; }
+    label { font-size: 12px; font-weight: 700; color: var(--text); }
+    .hint { font-size: 12px; color: var(--muted); }
+    input, textarea, select {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+    input:focus, textarea:focus, select:focus { border-color: rgba(83,74,183,0.45); box-shadow: 0 0 0 4px rgba(83,74,183,0.10); }
+    .actions { display: flex; gap: 10px; align-items: center; justify-content: flex-end; margin-top: 16px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; text-decoration: none; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-outline { background: #fff; color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover { border-color: rgba(83,74,183,0.35); color: var(--primary); }
+    .empty { padding: 18px; border: 1px dashed var(--border); border-radius: 12px; background: #fff; color: var(--muted); font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="top">
+        <div>
+          <div class="title">
+            {{ form.title if form is defined and form and form.title is defined else ("Form #" ~ form_id) }}
+          </div>
+          <div class="sub">Fill out all fields and submit once. Your responses are saved on successful submission.</div>
+        </div>
+        <div class="meta">
+          <span class="pill">Submit</span>
+          <a class="link" href="/dashboard">Back to dashboard</a>
+        </div>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}
+          <div class="flash {{ cat }}">{{ msg }}</div>
+        {% endfor %}
+      {% endwith %}
+
+      {% if fields and (fields|length) > 0 %}
+      <form method="POST" action="/forms/{{ form_id }}/submit">
+        <div class="grid">
+          {% for f in fields %}
+          <div class="field">
+            <label for="field_{{ f['field_id'] }}">{{ f['field_name'] }}</label>
+
+            {% set ft = (f['field_type'] or '')|upper %}
+            {% if ft == 'NUMERIC' %}
+              <input
+                id="field_{{ f['field_id'] }}"
+                name="field_{{ f['field_id'] }}"
+                type="number"
+                step="any"
+                {% if f.get('is_required') %}required{% endif %}
+                autocomplete="off"
+              />
+            {% elif ft == 'DATE' %}
+              <input
+                id="field_{{ f['field_id'] }}"
+                name="field_{{ f['field_id'] }}"
+                type="date"
+                {% if f.get('is_required') %}required{% endif %}
+                autocomplete="off"
+              />
+            {% else %}
+              <input
+                id="field_{{ f['field_id'] }}"
+                name="field_{{ f['field_id'] }}"
+                type="text"
+                {% if f.get('is_required') %}required{% endif %}
+                autocomplete="off"
+              />
+            {% endif %}
+
+            {% if f.get('validation_rule') %}
+              <div class="hint">Validation: {{ f['validation_rule'] }}</div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="actions">
+          <a class="btn btn-outline" href="/dashboard">Cancel</a>
+          <button class="btn btn-primary" type="submit">Submit</button>
+        </div>
+      </form>
+      {% else %}
+        <div class="empty">This form has no fields configured yet.</div>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>
